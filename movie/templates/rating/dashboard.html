@@ -1,0 +1,80 @@
+{% extends 'basedash.html' %}
+{% load staticfiles %}
+{% block title %}Movie Rating{% endblock %}
+
+{% block body %}
+
+<section class="container">
+<div class="container-fluid art-container">
+  <div class="page-header"><h3 class="headstyle text-center">Movie List</h3></div>
+
+    <table id="myTable" class="table table-striped" >
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Imdb Url</th>
+            <th>Imdb Rating</th>
+            <th>Years</th>
+            <th>Comedy</th>
+            <th>Subscribe</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% if movielist %}
+            {% for movielist in movielist %}
+          <tr>
+            <td>{{ movielist.title }}</td>
+            <td><a href="{{ movielist.url }}" target="_blank">Details</a> </td>
+            <td>{{ movielist.imdbrating }}</td>
+
+            <td>{{ movielist.year }}</td>
+            <td>{% if movielist.gen_comedy != "No Comedy" %}  Have {{ movielist.gen_comedy }} {% else %}{{ movielist.gen_comedy }}{% endif %}</td>
+            <td>
+                <a href="{% url 'subscribe' movielist.id user_id %}" class="btn-like" style="text-decoration: none" role="button">&nbsp;&nbsp;&nbsp;&nbsp;
+                            <i class="fa fa-fw fa-thumbs-o-up {% for list in movielist.subscribe_set.all %}{% ifequal user_id list.user_id %}{% if list.is_subscribed %}active{% endif %}{% endifequal %}{% endfor %}"></i>
+                        </a>
+            </td>
+          </tr>
+           {% endfor %}
+        {% else %}
+        <div class="col-sm-12">
+            <h1>No Movie List Available</h1>
+            </div>
+        {% endif %}
+        </tbody>
+      </table>
+
+</div>
+
+{% if movielist.has_other_pages %}
+  <ul class="pagination">
+    {% if movielist.has_previous %}
+      <li><a href="?page={{ movielist.previous_page_number }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&laquo;</span></li>
+    {% endif %}
+    {% for i in movielist.paginator.page_range %}
+      {% if movielist.number == i %}
+        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+      {% else %}
+        <li><a href="?page={{ i }}">{{ i }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if movielist.has_next %}
+      <li><a href="?page={{ movielist.next_page_number }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&raquo;</span></li>
+    {% endif %}
+  </ul>
+{% endif %}
+
+</section>
+{% endblock %}
+
+{% block moviezone %}
+    <script>
+$(document).ready(function(){
+    $('#myTable').dataTable({"paging":   false,"pageLength": 200});
+});
+</script>
+{% endblock %}

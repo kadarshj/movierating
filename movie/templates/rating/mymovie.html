@@ -1,0 +1,121 @@
+{% extends 'basedash.html' %}
+{% load staticfiles %}
+{% block title %}My Movie {% endblock %}
+
+{% block starcss %}
+    <link rel="stylesheet" type="text/css" href="{% static 'rating/css/starrr.css' %}"/>
+{% endblock %}
+{% block starjs %}
+    <script type="text/javascript" src="{% static 'rating/js/starrr.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+
+<section class="container">
+<div class="container-fluid art-container">
+  <div class="page-header"><h3 class="headstyle text-center">My Movie List</h3></div>
+
+    <table id="myTable" class="table table-striped" >
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Imdb Url</th>
+            <th>Imdb Rating</th>
+            <th>Years</th>
+            <th>Comedy</th>
+            <th>Rating</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% if movielist %}
+            {% for movielist in movielist %}
+          <tr>
+            <td>{{ movielist.movielist.title }}</td>
+            <td><a href="{{ movielist.movielist.url }}" target="_blank">Details</a> </td>
+            <td>{{ movielist.movielist.imdbrating }}</td>
+
+            <td>{{ movielist.movielist.year }}</td>
+            <td>{% if movielist.movielist.gen_comedy != "No Comedy" %}  Have {{ movielist.movielist.gen_comedy }} {% else %}{{ movielist.movielist.gen_comedy }}{% endif %}</td>
+            <td>
+                            <div class='starrr' id='star{{ movielist.movielist_id }}'></div>
+                            <br />
+                            <input type='hidden' name='rating' value='{{ movielist.rating }}' id='star{{ movielist.movielist_id }}_input' class="check" />
+            </td>
+          </tr>
+           {% endfor %}
+        {% else %}
+        <div class="col-sm-12">
+            <h1>No Movie List Available</h1>
+            </div>
+        {% endif %}
+        </tbody>
+      </table>
+
+</div>
+
+{% if movielist.has_other_pages %}
+  <ul class="pagination">
+    {% if movielist.has_previous %}
+      <li><a href="?page={{ movielist.previous_page_number }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&laquo;</span></li>
+    {% endif %}
+    {% for i in movielist.paginator.page_range %}
+      {% if movielist.number == i %}
+        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+      {% else %}
+        <li><a href="?page={{ i }}">{{ i }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if movielist.has_next %}
+      <li><a href="?page={{ movielist.next_page_number }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&raquo;</span></li>
+    {% endif %}
+  </ul>
+{% endif %}
+
+</section>
+{% endblock %}
+
+{% block moviezone %}
+    <script>
+$(document).ready(function(){
+    $('#myTable').dataTable({"paging":   false,"pageLength": 200});
+});
+</script>
+{% endblock %}
+
+{% block init %}
+    {% if movielist %}
+            {% for movielist in movielist %}
+                            <script>
+                            $(document).ready(function() {
+                                var $s2input = $('#star{{ movielist.movielist_id }}_input');
+                                $('#star{{ movielist.movielist_id }}').starrr({
+                                    max: 5,
+                                    rating: {{ movielist.rating }},
+                                    change: function (e, value) {
+                                        $s2input.val(value).trigger('input');
+
+                                        $.ajax({
+                                            url: '{% url 'ranking' %}',
+                                            data: {
+                                                    'rating': $s2input.val(),
+                                                    'user_id':{{ user_id }},
+                                                    'movielist_id':{{ movielist.movielist_id }}
+                                                    },
+                                            dataType: 'json',
+                                            success: function (data) {
+                                                    if (data.is_taken) {
+                                                            alert("Worked");
+                                                    }
+                                                }
+                                            });
+                                    }
+                                });
+                            });
+                            </script>
+
+    {% endfor %}{% endif %}
+ {% endblock %}
